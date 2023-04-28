@@ -7,11 +7,6 @@ import { Players } from "@rbxts/services";
 	All the libraries and dependencies that are used throughout the code.
 	
 */
-
-/*
-	Bin
-	Tracks connections, instances, functions, threads, and objects to be later destroyed.
-*/
 /**
  * Tracks connections, instances, functions, threads, and objects to be later destroyed.
  */
@@ -26,8 +21,8 @@ class Bin {
 	 * - thread
 	 * - Object with `.destroy()` or `.Destroy()`
 	 */
-	public add(item: Bin.Item, method?: string) {
-		const node: Node = { item, method };
+	public add<I extends Bin.Item>(item: I) {
+		const node: Node = { item };
 		this.head ??= node;
 		if (this.tail) this.tail.next = node;
 		this.tail = node;
@@ -42,8 +37,9 @@ class Bin {
 	 * - Objects will be `.destroy()`-ed
 	 */
 	public destroy(): void {
-		while (this.head) {
-			const item = this.head.item;
+		let head = this.head;
+		while (head) {
+			const { item } = head;
 			if (typeIs(item, "function")) {
 				item();
 			} else if (typeIs(item, "RBXScriptConnection")) {
@@ -55,7 +51,8 @@ class Bin {
 			} else if ("Destroy" in item) {
 				item.Destroy();
 			}
-			this.head = this.head.next;
+			head = head.next;
+			this.head = head;
 		}
 	}
 
@@ -70,12 +67,11 @@ class Bin {
 namespace Bin {
 	export type Item = (() => unknown) | RBXScriptConnection | thread | { destroy(): void } | { Destroy(): void };
 }
-type Node = { next?: Node; item: Bin.Item; method?: string };
+type Node = { next?: Node; item: Bin.Item };
 
-/*
-	Framework
-	A framework for easy and organized development.
-*/
+/**
+ * A base class for components to extend.
+ */
 class BaseComponent<I extends Instance = Instance> implements OnInit, OnStart, Destroyable {
 	public readonly instance: I;
 	public readonly _cleanup = new Bin();
@@ -87,10 +83,13 @@ class BaseComponent<I extends Instance = Instance> implements OnInit, OnStart, D
 		this.instance = instance;
 	}
 
-	/** @hidden */
 	public run() {
 		this.onInit();
 		if (!this.destructed) this.onStart();
+	}
+
+	public isActive() {
+		return this.active;
 	}
 
 	public onInit(): void {
@@ -102,10 +101,6 @@ class BaseComponent<I extends Instance = Instance> implements OnInit, OnStart, D
 		this.active = true;
 	}
 
-	public isActive() {
-		return this.active;
-	}
-
 	public destroy(): void {
 		if (this.destructed) return;
 		this._cleanup.destroy();
@@ -114,19 +109,22 @@ class BaseComponent<I extends Instance = Instance> implements OnInit, OnStart, D
 	}
 }
 
+/**
+ * A base class for controllers to extend.
+ */
 class BaseController implements OnInit, OnStart, Destroyable {
 	public readonly _cleanup = new Bin();
 	private active = false;
 	private destructed = false;
 
+	public isActive() {
+		return this.active;
+	}
+
 	public onInit(): void {}
 
 	public onStart(): void {
 		this.active = true;
-	}
-
-	public isActive() {
-		return this.active;
 	}
 
 	public destroy(): void {
@@ -244,12 +242,19 @@ class CharacterComponent extends BaseComponent<Model> {
 }
 
 class EntityComponent extends CharacterComponent {
-	public static attached = new Map<Model, EntityComponent>();
+	private static attached = new Map<Model, EntityComponent>();
+	public static getComponent(instance: Model) {
+		return EntityComponent.attached.get(instance);
+	}
 
 	constructor(instance: Model, player?: Player) {
 		super(instance, player);
 		task.defer(() => this.run());
-		EntityComponent.attached.set(instance, this);
+	}
+
+	public run(): void {
+		super.run();
+		EntityComponent.attached.set(this.instance, this);
 	}
 
 	public onInit(): void {
@@ -273,11 +278,18 @@ class EntityComponent extends CharacterComponent {
 }
 
 class AvatarComponent extends CharacterComponent {
-	public static attached: AvatarComponent | undefined;
+	private static attached: AvatarComponent | undefined;
+	public static getComponent() {
+		return AvatarComponent.attached;
+	}
 
 	constructor(instance: Model, player?: Player) {
 		super(instance, player);
 		task.defer(() => this.run());
+	}
+
+	public run(): void {
+		super.run();
 		AvatarComponent.attached = this;
 	}
 }
@@ -290,7 +302,10 @@ class AvatarComponent extends CharacterComponent {
 
 */
 class ExampleController extends BaseController implements OnInit, OnStart {
-	public static instance = new this();
+	private static instance = new ExampleController();
+	public static getInstance() {
+		return ExampleController.instance;
+	}
 }
 
 /*
