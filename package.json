@@ -22,7 +22,7 @@
     "prettier": "^2.8.7",
     "rbxts-transformer-services": "^1.0.1",
     "roblox-ts": "^2.1.0",
-    "synapse-x-types": "^0.5.1",
+    "synapse-x-types": "^0.5.2",
     "typescript": "^4.9.4"
   }
 }

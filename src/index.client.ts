@@ -308,13 +308,16 @@ class ExampleController extends BaseController implements OnInit, OnStart {
 	}
 }
 
-/*
-	---------------
-	Event Listeners
-	---------------
-	Register all the event listeners, and responds to them.
+class ComponentController extends BaseController implements OnInit, OnStart {
+	private static instance = new ComponentController();
+	public static getInstance() {
+		return ComponentController.instance;
+	}
 
-*/
+	public onInit(): void {}
+
+	public onStart(): void {}
+}
 
 /*
 	----------------------
