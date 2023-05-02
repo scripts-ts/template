@@ -1,4 +1,4 @@
-import { Players } from "@rbxts/services";
+import { Players, RunService } from "@rbxts/services";
 
 /*
 	------------------------
@@ -143,7 +143,7 @@ interface OnStart {
 	onStart(): void;
 }
 
-interface onTick {
+interface OnTick {
 	onTick(dt: number): void;
 }
 
@@ -242,11 +242,6 @@ class CharacterComponent extends BaseComponent<Model> {
 }
 
 class EntityComponent extends CharacterComponent {
-	private static attached = new Map<Model, EntityComponent>();
-	public static getComponent(instance: Model) {
-		return EntityComponent.attached.get(instance);
-	}
-
 	constructor(instance: Model, player?: Player) {
 		super(instance, player);
 		task.defer(() => this.run());
@@ -275,14 +270,17 @@ class EntityComponent extends CharacterComponent {
 	public destroy(): void {
 		super.destroy();
 	}
+
+	private static attached = new Map<Model, EntityComponent>();
+	public static getComponent(instance: Model) {
+		return EntityComponent.attached.get(instance);
+	}
+	public static getComponents() {
+		return this.attached;
+	}
 }
 
 class AvatarComponent extends CharacterComponent {
-	private static attached: AvatarComponent | undefined;
-	public static getComponent() {
-		return AvatarComponent.attached;
-	}
-
 	constructor(instance: Model, player?: Player) {
 		super(instance, player);
 		task.defer(() => this.run());
@@ -291,6 +289,14 @@ class AvatarComponent extends CharacterComponent {
 	public run(): void {
 		super.run();
 		AvatarComponent.attached = this;
+	}
+
+	private static attached: AvatarComponent | undefined;
+	public static getComponent() {
+		return AvatarComponent.attached;
+	}
+	public static getComponents() {
+		return this.attached;
 	}
 }
 
@@ -301,14 +307,7 @@ class AvatarComponent extends CharacterComponent {
 	All the controllers that are used in the code are declared here.
 
 */
-class ExampleController extends BaseController implements OnInit, OnStart {
-	private static instance = new ExampleController();
-	public static getInstance() {
-		return ExampleController.instance;
-	}
-}
-
-class ComponentController extends BaseController implements OnInit, OnStart {
+class ComponentController extends BaseController {
 	private static instance = new ComponentController();
 	public static getInstance() {
 		return ComponentController.instance;
@@ -319,6 +318,23 @@ class ComponentController extends BaseController implements OnInit, OnStart {
 	public onStart(): void {}
 }
 
+class LifecycleController extends BaseController implements OnTick, OnRender, OnPhysics {
+	public onStart(): void {
+		RunService.PreRender.Connect((dt) => this.onRender(dt));
+		RunService.PreSimulation.Connect((dt) => this.onPhysics(dt));
+		RunService.PostSimulation.Connect((dt) => this.onTick(dt));
+	}
+
+	public onTick(dt: number): void {}
+	public onRender(dt: number): void {}
+	public onPhysics(dt: number): void {}
+
+	private static instance = new LifecycleController();
+	public static getInstance() {
+		return LifecycleController.instance;
+	}
+}
+
 /*
 	----------------------
 	Initiation & Execution
@@ -326,3 +342,8 @@ class ComponentController extends BaseController implements OnInit, OnStart {
 	All the code that is executed on startup is placed here.
 
 */
+// Controllers - Initiation
+const controllers = [LifecycleController.getInstance(), ComponentController.getInstance()];
+const max = controllers.size() - 1;
+for (const i of $range(0, max)) controllers[i].onInit();
+for (const i of $range(0, max)) task.defer(() => controllers[i].onStart());
