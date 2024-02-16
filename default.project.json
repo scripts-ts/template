@@ -1,5 +1,5 @@
 {
-	"name": "synapse-template",
+	"name": "roblox-ts-model",
 	"globIgnorePaths": [
 		"**/package.json",
 		"**/tsconfig.json"

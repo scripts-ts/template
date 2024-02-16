@@ -10,9 +10,5 @@
 		"editor.formatOnSave": true
 	},
 	"eslint.run": "onType",
-	"eslint.format.enable": true,
-
-	"editor.codeActionsOnSave": {
-		"source.organizeImports": true
-	}
+	"eslint.format.enable": true
 }
