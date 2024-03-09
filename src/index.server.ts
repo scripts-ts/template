@@ -1,12 +1,14 @@
 import { Players } from "@rbxts/services";
 import { Destructible, Node } from "types";
 
+if (_G["program id"]) throw "This program is already running!";
+_G["program id"] = true;
+
 /************************************************************
  * CONFIGURATIONS
  * Description: User-defined settings and configurations
  * Last updated: Feb. 14, 2024
  ************************************************************/
-const CONFIGURATIONS = {};
 
 /************************************************************
  * VARIABLES
@@ -112,11 +114,15 @@ class BaseComponent<T extends Instance> {
  * Description: Singletons that are used once
  * Last updated: Feb. 14, 2024
  ************************************************************/
+namespace ExampleController {
+	export function __init() {}
+}
 
 /************************************************************
  * INITIALIZATION
  * Description: Initializes and starts the runtime
  * Last updated: Feb. 14, 2024
  ************************************************************/
+ExampleController.__init();
 
 export = "Initialized Successfully";

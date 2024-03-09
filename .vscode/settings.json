@@ -7,8 +7,12 @@
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
-		"editor.formatOnSave": true
+		"editor.formatOnSave": true,
 	},
 	"eslint.run": "onType",
-	"eslint.format.enable": true
+	"eslint.format.enable": true,
+
+	"editor.codeActionsOnSave": {
+		"source.organizeImports": "always"
+	}
 }
